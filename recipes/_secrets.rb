@@ -11,21 +11,30 @@ lumberjack_data_bag = node['elkstack']['config']['lumberjack_data_bag']
 
 # try an encrypted data bag first
 lumberjack_secrets = nil
-begin
-  lumberjack_secrets = Chef::EncryptedDataBagItem.load(lumberjack_data_bag, 'secrets')
-  lumberjack_secrets.to_hash # access it to force an error to be raised
-rescue
-  Chef::Log.warn("Could not find encrypted data bag item #{lumberjack_data_bag}/secrets")
-  lumberjack_secrets = nil
-end
-
-# try an unencrypted databag next
-if lumberjack_secrets.nil?
+case node['elkstack']['data_bag']['type'] 
+when 'encrypted'
+  begin
+    lumberjack_secrets = Chef::EncryptedDataBagItem.load(lumberjack_data_bag, 'secrets')
+    lumberjack_secrets.to_hash # access it to force an error to be raised
+  rescue
+    Chef::Log.warn("Could not find encrypted data bag item #{lumberjack_data_bag}/secrets")
+    lumberjack_secrets = nil
+  end
+when 'unencrypted'
   begin
     lumberjack_secrets = Chef::DataBagItem.load(lumberjack_data_bag, 'secrets')
     lumberjack_secrets.to_hash
   rescue
     Chef::Log.warn("Could not find un-encrypted data bag item #{lumberjack_data_bag}/secrets")
+    lumberjack_secrets = nil
+  end
+when 'vault'
+  begin
+    include_recipe 'chef-vault'
+    lumberjack_secrets = ChefVault::Item.load(lumberjack_data_bag, 'secrets')
+    lumberjack_secrets.to_hash
+  rescue
+    Chef::Log.warn("Could not find vault item #{lumberjack_data_bag}/secrets")
     lumberjack_secrets = nil
   end
 end

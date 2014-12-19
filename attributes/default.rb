@@ -29,6 +29,9 @@ default['elkstack']['config']['kibana']['redirect'] = true
 # (see kibana_ssl.rb for how to set a password using node.run_state)
 default['elkstack']['config']['kibana']['username'] = 'kibana'
 
+# data bag type - valid choices are encrypted, unencrypted or vault
+default['elkstack']['data_bag']['type'] = 'encrypted'
+
 # data bag for lumerjack certificate and key
 default['elkstack']['config']['lumberjack_data_bag'] = 'lumberjack'
 
